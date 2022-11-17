@@ -1,0 +1,155 @@
+
+
+Symbols from C:\Users\XIRKA(~1\AppData\Local\Temp\arduino_build_295343/Mikro_Sensor.ino.elf:
+
+Name                  Value   Class        Type         Size     Line  Section
+
+__heap_end          |00000000|   W  |            NOTYPE|        |     |*ABS*
+__TEXT_REGION_ORIGIN__|00000000|   W  |            NOTYPE|        |     |*ABS*
+__tmp_reg__         |00000000|   a  |            NOTYPE|        |     |*ABS*
+__tmp_reg__         |00000000|   a  |            NOTYPE|        |     |*ABS*
+__tmp_reg__         |00000000|   a  |            NOTYPE|        |     |*ABS*
+__vector_default    |00000000|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:61
+__vectors           |00000000|   T  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:61
+__zero_reg__        |00000001|   a  |            NOTYPE|        |     |*ABS*
+__zero_reg__        |00000001|   a  |            NOTYPE|        |     |*ABS*
+__zero_reg__        |00000001|   a  |            NOTYPE|        |     |*ABS*
+__FUSE_REGION_LENGTH__|0000000a|   A  |            NOTYPE|        |     |*ABS*
+__CCP__             |00000034|   a  |            NOTYPE|        |     |*ABS*
+__CCP__             |00000034|   a  |            NOTYPE|        |     |*ABS*
+__CCP__             |00000034|   a  |            NOTYPE|        |     |*ABS*
+__SP_L__            |0000003d|   a  |            NOTYPE|        |     |*ABS*
+__SP_L__            |0000003d|   a  |            NOTYPE|        |     |*ABS*
+__SP_L__            |0000003d|   a  |            NOTYPE|        |     |*ABS*
+__SP_H__            |0000003e|   a  |            NOTYPE|        |     |*ABS*
+__SP_H__            |0000003e|   a  |            NOTYPE|        |     |*ABS*
+__SP_H__            |0000003e|   a  |            NOTYPE|        |     |*ABS*
+__SREG__            |0000003f|   a  |            NOTYPE|        |     |*ABS*
+__SREG__            |0000003f|   a  |            NOTYPE|        |     |*ABS*
+__SREG__            |0000003f|   a  |            NOTYPE|        |     |*ABS*
+__ctors_start       |0000007c|   T  |            NOTYPE|        |     |.text
+__trampolines_end   |0000007c|   T  |            NOTYPE|        |     |.text
+__trampolines_start |0000007c|   T  |            NOTYPE|        |     |.text
+__ctors_end         |0000007e|   T  |            NOTYPE|        |     |.text
+__dtors_start       |0000007e|   T  |            NOTYPE|        |     |.text
+__dtors_end         |00000080|   T  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:230
+__init              |00000080|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:230
+_initThreeStuff()   |0000008c|   T  |              FUNC|00000018|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/main.cpp:145
+__do_clear_bss      |000000a4|   T  |            NOTYPE|00000010|     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2441
+.do_clear_bss_loop  |000000ac|   t  |            NOTYPE|        |     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2446
+.do_clear_bss_start |000000ae|   t  |            NOTYPE|        |     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2448
+__do_copy_data      |000000b4|   T  |            NOTYPE|00000016|     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2409
+__do_global_ctors   |000000ca|   T  |            NOTYPE|00000014|     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2466
+__bad_interrupt     |000000e2|   T  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_1          |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_10         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_11         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_12         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_13         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_14         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_16         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_17         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_18         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_19         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_2          |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_20         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_21         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_22         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_23         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_24         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_25         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_26         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_3          |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_30         |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_4          |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_5          |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_6          |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_7          |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_8          |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+__vector_9          |000000e2|   W  |            NOTYPE|        |     |.text	../../../../crt1/gcrt1.S:315
+HardwareSerial::availableForWrite()|000000e4|   t  |              FUNC|0000001e|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:662
+__EEPROM_REGION_LENGTH__|00000100|   A  |            NOTYPE|        |     |*ABS*
+HardwareSerial::read()|00000102|   t  |              FUNC|00000028|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:646
+HardwareSerial::peek()|0000012a|   t  |              FUNC|0000001c|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:638
+HardwareSerial::available()|00000146|   t  |              FUNC|00000018|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:634
+HardwareSerial::_poll_tx_data_empty()|0000015e|   t  |              FUNC|0000003e|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:367
+_poll_dre_done      |0000019a|   t  |            NOTYPE|        |     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:421
+HardwareSerial::write(unsigned char)|0000019c|   t  |              FUNC|00000098|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:702
+HardwareSerial::flush()|00000234|   t  |              FUNC|00000028|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:671
+String::StringIfHelper() const|0000025c|   t  |              FUNC|00000002|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore\api/String.h:56
+Print::write(unsigned char const*, unsigned int)|0000025e|   t  |              FUNC|0000005a|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore\api/Print.cpp:29
+String::String(char)|000002b8|   t  |              FUNC|000000a4|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore\api/String.cpp:58
+String::move(String&)|0000035c|   t  |              FUNC|0000006e|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore\api/String.cpp:183
+pinMode             |000003ca|   t  |              FUNC|0000003e|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/wiring_digital.c:158
+__LOCK_REGION_LENGTH__|00000400|   A  |            NOTYPE|        |     |*ABS*
+__SIGNATURE_REGION_LENGTH__|00000400|   A  |            NOTYPE|        |     |*ABS*
+__USER_SIGNATURE_REGION_LENGTH__|00000400|   A  |            NOTYPE|        |     |*ABS*
+_do_dre             |00000408|   t  |            NOTYPE|        |     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:328
+_do_dre()           |00000408|   T  |              FUNC|0000005c|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:245
+_poll_dre           |00000418|   t  |            NOTYPE|        |     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:328
+_done_dre_irq       |00000446|   t  |            NOTYPE|        |     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:328
+_do_rxc             |00000464|   t  |            NOTYPE|        |     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:193
+_do_rxc()           |00000464|   T  |              FUNC|0000005a|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:127
+_end_rxc            |000004a2|   t  |            NOTYPE|        |     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:193
+_buff_full_rxc      |000004ba|   t  |            NOTYPE|        |     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:193
+_do_txc             |000004be|   t  |            NOTYPE|        |     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:108
+_do_txc()           |000004be|   T  |              FUNC|00000026|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:85
+_txc_flush_rx       |000004c8|   t  |            NOTYPE|        |     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART.cpp:108
+__vector_15         |000004e4|   T  |              FUNC|000000b6|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/wiring.c:152
+__vector_28         |0000059a|   T  |              FUNC|0000000a|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART0.cpp:96
+__vector_27         |000005a4|   T  |              FUNC|0000000a|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART0.cpp:74
+__vector_29         |000005ae|   T  |              FUNC|00000006|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART0.cpp:41
+global constructors keyed to 65535_0_Mikro_Sensor.ino.cpp.o.2881|000005b4|   t  |              FUNC|000000ac|     |.text
+main                |00000660|   T  |              FUNC|000002ee|     |.text	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/main.cpp:49
+__DATA_REGION_LENGTH__|00000800|   A  |            NOTYPE|        |     |*ABS*
+_GLOBAL__sub_D_a    |0000094e|   t  |              FUNC|0000001e|     |.text
+atol                |0000096c|   T  |              FUNC|0000004c|     |.text
+__mulsi_const_10    |000009b8|   T  |            NOTYPE|        |     |.text
+__prologue_saves__  |000009e2|   T  |            NOTYPE|00000032|     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2169
+__epilogue_restores__|00000a14|   T  |            NOTYPE|00000030|     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2222
+__tablejump2__      |00000a44|   T  |            NOTYPE|0000000c|     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2296
+malloc              |00000a50|   T  |              FUNC|00000138|     |.text
+free                |00000b88|   T  |              FUNC|00000112|     |.text
+realloc             |00000c9a|   T  |              FUNC|0000016c|     |.text
+memcpy              |00000e06|   T  |              FUNC|00000012|     |.text
+strcpy              |00000e18|   T  |              FUNC|0000000e|     |.text
+__do_global_dtors   |00000e26|   T  |            NOTYPE|00000014|     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2496
+_exit               |00000e26|   T  |            NOTYPE|        |     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2496
+exit                |00000e26|   W  |            NOTYPE|        |     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2496
+__stop_program      |00000e3c|   t  |            NOTYPE|        |     |.text	/home/admin/Arduino/toolchain-avr-special/gcc-build/avr/avrxmega3/libgcc/../../../../gcc/libgcc/config/avr/lib1funcs.S:2280
+_etext              |00000e3e|   T  |            NOTYPE|        |     |.text
+__data_load_start   |00000e87|   A  |            NOTYPE|        |     |*ABS*
+__data_load_end     |00000e8d|   A  |            NOTYPE|        |     |*ABS*
+__stack             |00003fff|   W  |            NOTYPE|        |     |*ABS*
+__TEXT_REGION_LENGTH__|00004000|   A  |            NOTYPE|        |     |*ABS*
+__RODATA_PM_OFFSET__|00008000|   A  |            NOTYPE|        |     |*ABS*
+digital_pin_to_bit_position|00008e3e|   r  |            OBJECT|00000012|     |.rodata	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\variants\txy6/pins_arduino.h:330
+digital_pin_to_port |00008e50|   r  |            OBJECT|00000012|     |.rodata	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\variants\txy6/pins_arduino.h:305
+digital_pin_to_bit_mask|00008e62|   r  |            OBJECT|00000012|     |.rodata	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\variants\txy6/pins_arduino.h:354
+vtable for HardwareSerial|00008e74|   r  |            OBJECT|00000012|     |.rodata
+__DATA_REGION_ORIGIN__|00803800|   A  |            NOTYPE|        |     |*ABS*
+__data_start        |00803800|   D  |            NOTYPE|        |     |.data
+__malloc_heap_end   |00803800|   D  |            OBJECT|00000002|     |.data
+__malloc_heap_start |00803802|   D  |            OBJECT|00000002|     |.data
+__malloc_margin     |00803804|   D  |            OBJECT|00000002|     |.data
+__bss_start         |00803806|   B  |            NOTYPE|        |     |.bss
+__data_end          |00803806|   D  |            NOTYPE|        |     |.data
+_edata              |00803806|   D  |            NOTYPE|        |     |.data
+a2                  |00803806|   b  |            OBJECT|00000002|     |.bss	D:\Inkubator\Learning\SkinTemp_Isolation\Mikro_Sensor/Mikro_Sensor.ino:7
+a                   |00803808|   b  |            OBJECT|00000002|     |.bss	D:\Inkubator\Learning\SkinTemp_Isolation\Mikro_Sensor/Mikro_Sensor.ino:6
+dat                 |0080380a|   b  |            OBJECT|00000002|     |.bss	D:\Inkubator\Learning\SkinTemp_Isolation\Mikro_Sensor/Mikro_Sensor.ino:8
+dataSensor2         |0080380c|   b  |            OBJECT|00000002|     |.bss	D:\Inkubator\Learning\SkinTemp_Isolation\Mikro_Sensor/Mikro_Sensor.ino:18
+b                   |0080380e|   b  |            OBJECT|00000002|     |.bss	D:\Inkubator\Learning\SkinTemp_Isolation\Mikro_Sensor/Mikro_Sensor.ino:14
+last                |00803810|   b  |            OBJECT|00000001|     |.bss	D:\Inkubator\Learning\SkinTemp_Isolation\Mikro_Sensor/Mikro_Sensor.ino:20
+current             |00803811|   b  |            OBJECT|00000001|     |.bss	D:\Inkubator\Learning\SkinTemp_Isolation\Mikro_Sensor/Mikro_Sensor.ino:19
+timer_overflow_count|00803812|   b  |            OBJECT|00000004|     |.bss	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/wiring.c:83
+timer_fract         |00803816|   b  |            OBJECT|00000002|     |.bss	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/wiring.c:77
+timer_millis        |00803818|   b  |            OBJECT|00000004|     |.bss	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/wiring.c:79
+Serial0             |0080381c|   b  |            OBJECT|00000091|     |.bss	C:\Users\Xirka (Throwaway)\AppData\Local\Arduino15\packages\megaTinyCore\hardware\megaavr\2.6.1\cores\megatinycore/UART0.cpp:112
+dataArray3          |008038ad|   b  |            OBJECT|00000078|     |.bss	D:\Inkubator\Learning\SkinTemp_Isolation\Mikro_Sensor/Mikro_Sensor.ino:23
+__brkval            |00803925|   B  |            OBJECT|00000002|     |.bss
+__flp               |00803927|   B  |            OBJECT|00000002|     |.bss
+__bss_end           |00803929|   B  |            NOTYPE|        |     |.bss
+__heap_start        |00803929|   N  |            NOTYPE|        |     |.comment
+_end                |00803929|   N  |            NOTYPE|        |     |.comment
+__eeprom_end        |00810000|   N  |            NOTYPE|        |     |.comment
