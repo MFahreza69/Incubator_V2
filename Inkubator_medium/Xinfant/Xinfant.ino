@@ -6,33 +6,39 @@
 #include <PID_v1.h>
 #include "src/library/SHT15/SHT1X.h"
 #include "src/library/SimpleTimer/SimpleTimer.h"
+#include "src/library/O2control/XMV20_O2Sensor.h"
 #include <SoftwareSerial.h>
 
 /*
     Define pins
 */
 /*                 | Select Pin  | PCB NEW ISOLASI   |   Atmega64 |*/
-#define shtData         16          /*24*/            /*24*/
-#define shtClock        17          /*25*/            /*25*/
-#define oxygenPin       A2          /*A5*/           /*A2*/
-#define skinTemp1       A0          
-#define skinTemp2       A1
-#define waterPin        14           /*39*/            /*14*/
-#define warmerPin       13            /*3*/ /*auxiliary 13*/
+#define shtData         24          /*24*/            /*24*/
+#define shtClock        25          /*25*/            /*25*/
+#define waterPin        39           /*39*/            /*14*/
+#define warmerPin       3            /*3*/ /*auxiliary 13*/
 #define heaterPin       4            /*4*/           /*4*/
-#define fanPin          3            /*5*/           /*3*/
-// #define valvePin     15
-// #define pinBuzzer    A7      
-// #define O2Press      A3
+#define fanPin          5            /*5*/           /*3*/
+#define lampPin         13
+#define pinBuzzer       16
+#define pinSpeaker      14      
+#define O2Press         48
 // #define pinOnOff     A4          /*A10*/          /*A4*/
-#define voltage5V       A5//POWRIN          /*2*/          /*A5*/
+#define voltage5V       2//POWRIN          /*2*/          /*A5*/
 // #define pinLamp      A7                          /*A7*/
 #define pinRst          33          /**/ 
-#define dataIn          A7          /*22*/
-#define clkOut          A4          /*23*/
-// #define relayHeat       36
-// #define relayWarm       34
-// #define pulse_ip     49
+#define dataIn          22          /*22*/
+#define clkOut          23          /*23*/
+#define relayHeat       36
+#define relayWarm       34
+#define relayLamp       35
+#define pulse_ip        49
+#define vbat            50
+#define green           43
+#define red             42
+#define yellow          44
+#define valvePin        15
+#define o2sensor        47
 
 /*
     Define variables
@@ -51,7 +57,7 @@ int lock                    = 1;
 unsigned long last_time     = 0;
 unsigned long last_time1    = 0;
 unsigned long tcal          = 0;
-
+//
 /*variable data*/
 int a                       = 0;
 unsigned long b;
@@ -81,6 +87,8 @@ uint8_t error6              = 0;
 float displaySetTemp        = 27;
 float displayBabyTemp0      = 0;
 float displayBabyTemp1      = 0;
+uint16_t convertskin0;
+uint16_t convertskin1;
 float lastDisplay           = 0;
 float lastHumidity          = 0;
 float setTemp               = 0;
@@ -114,6 +122,7 @@ unsigned int DO = 1800;
 
 //timer Variable data
 uint8_t timeMode = 0;
+unsigned long startup = 0;
 
 static char userInput[255];
 static unsigned char x;
@@ -129,7 +138,7 @@ double setPoint1;
 double input;
 double outputHeater;
 double outputFan;
-
+uint8_t oxygen;
 uint8_t halfBit;
 uint8_t fullBit;
 int dataArray[20];
@@ -137,20 +146,13 @@ unsigned long timePulse;
 unsigned long generateData;
 uint8_t highState = 0;
 uint8_t sampleState = 0;
-int dataSensor1 = 0;
-int dataSensor2 = 0;
+int dataSensor1;
+int dataSensor2;
 uint8_t pulsa = 0;
 uint8_t start = 1;
 
-//freq motordc
-int ontime,offtime,duty;
-float freq1,period1;
-
-//sleep mode variable
-// bool from_wdt = false;
-// bool sleepCommand = false;
-// bool stateWake = false;
-// uint16_t batValue = 0;
+int vbatsense;
+bool valuePower = 1;
 
 
 PID myPID(&input, &outputHeater, &setPoint1, 40.68 , 0.23, 0 ,DIRECT);
@@ -159,7 +161,8 @@ PID myPID3(&input, &outputHeater, &setPoint1, 32.02, 0.23, 0, DIRECT);
 Xbaby Xinfant;
 RTC_DS3231 rtc;
 SHT1x sht15(shtData, shtClock);
-SoftwareSerial mySerial(6, 24); // RX, TX // Only Use RX
+SoftwareSerial mySerial(6, 7); // RX, TX // Only Use RX
+O2Sensor O2SensorDev(o2sensor);
 SimpleTimer timer0;
 SimpleTimer timer1;
 SimpleTimer timer3;
@@ -167,42 +170,58 @@ SimpleTimer timer4;
 SimpleTimer timer5;
 
 void pin_setup(){
-  pinMode(26, OUTPUT);
+  pinMode(12, OUTPUT);
+  pinMode(lampPin, OUTPUT);
   pinMode(heaterPin, OUTPUT);
   pinMode(fanPin, OUTPUT);
   pinMode(warmerPin, OUTPUT);
-  // pinMode(relayHeat, OUTPUT);
-  // pinMode(relayWarm, OUTPUT);
+  pinMode(relayHeat, OUTPUT);
+  pinMode(relayWarm, OUTPUT);
+  pinMode(relayLamp, OUTPUT);
   pinMode(pinRst, OUTPUT);
-//   pinMode(pinBuzzer, OUTPUT);
-//   pinMode(pinLamp, OUTPUT);
+  pinMode(pinBuzzer, OUTPUT);
+  pinMode(pinSpeaker, OUTPUT);
   pinMode(voltage5V, INPUT);
   pinMode(dataIn, INPUT);
   pinMode(clkOut, OUTPUT);
-  // pinMode(pulse_ip,INPUT);
+  pinMode(pulse_ip,INPUT);
+  pinMode(vbat, INPUT);
+  pinMode(red, OUTPUT);
+  pinMode(green, OUTPUT);
+  pinMode(yellow, OUTPUT);
+  pinMode(valvePin, OUTPUT);
+  pinMode(o2sensor, INPUT);
 }
 
 void setup(){
+    analogReference(EXTERNAL);
     mySerial.begin(9600);
-    Serial1.begin(9600);
+//    Serial1.begin(9600);
     rtc.begin();
-    // Serial.begin(9600);
-    setup_fast_pwm();
+    Serial.begin(9600);
     pin_setup();
     timer0.setInterval(1000, generate_json); 
     timer3.setInterval(1000, PID);
     timer4.setInterval(1200, read_temperature);
-    // timer5.setInterval(1000, alarem);
-    analogWrite(warmerPin, 0);
     myPID.SetOutputLimits(40,215);
     myPID.SetMode(AUTOMATIC);
     myPID2.SetOutputLimits(100, 130);
     myPID2.SetMode(AUTOMATIC);
-    myPID3.SetOutputLimits(64, 170);
+    myPID3.SetOutputLimits(64, 180);
     myPID3.SetMode(AUTOMATIC);
+    digitalWrite(relayHeat, LOW);
+    digitalWrite(relayWarm, LOW);
+    digitalWrite(relayLamp, LOW);  
+    digitalWrite(pinBuzzer, LOW);
+    digitalWrite(pinSpeaker, LOW);  
+    digitalWrite(red, LOW);
+    digitalWrite(yellow, LOW);
+    digitalWrite(green, LOW);
+    analogWrite(valvePin, 0);
+    analogWrite(warmerPin, 0);
     pulsa = 0;
     start = 0;
-    delay(1000);
+    delay(2000);
     // cli();
     // // Enable Watch Dog Timer
     // WDTCSR = (1 << WDCE) | (1 << WDE);
@@ -216,25 +235,28 @@ void loop(){
 }
 
 void run_program(){
-  // if(fromWdt == true && stateWake == true){
-    generate_pulse();
-    sample_data();
-    communication_serial();
-    timer0.run();
-    timer3.run();
-    timer4.run();
-    // // timer5.run();
-    // // digitalWrite(pinLamp, HIGH);
-    digitalWrite(26, LOW); 
-    // // read_temperature();
-    read_skin_temperature();
-    read_error();
-    run_warmer();
-    // alarem();
-    pewaktu();
-    //}
-     
-}
+    vbat_read();
+    if(valuePower == 1){
+      generate_pulse();
+      sample_data();
+      communication_serial();
+      timer0.run();
+      timer3.run();
+      timer4.run();
+      // timer5.run();
+      digitalWrite(12, LOW); 
+      read_skin_temperature();
+      read_error();
+      run_warmer();
+      // alarem();
+      pewaktu();
+      digitalWrite(7, HIGH);
+    }
+    if(valuePower == 0){
+      digitalWrite(7, LOW);
+    }
+ }
+
 
 /*Communication Data*/////////////////////////////////////////////////////////////////////////////////////////
 //Read data com input using mySerial (RX pin 6)
@@ -272,9 +294,9 @@ void generate_json(){
         outDbg["sh"][3] = humidityMid;
         // outDbg["pw"][1] = round(outputFan);
         outDbg["tm"][0] = round(outputHeater);
-        outDbg["tm"][1] = now.hour();
-        outDbg["tm"][2] = now.minute();
-        // outDbg["tim"][2] = now.second();
+         outDbg["tm"][1] = now.hour();
+         outDbg["tm"][2] = now.minute();
+//         outDbg["tim"][2] = now.second();
         outDbg["er"][0] = error0; //probe missing
         outDbg["er"][1] = error1; // alarm deviation airway
         outDbg["er"][2] = error2; // alarm deviation skin
@@ -282,11 +304,10 @@ void generate_json(){
         outDbg["er"][4] = error4;
         outDbg["er"][5] = error5;
         outDbg["er"][6] = error6;
-        serializeJson(outDbg, Serial1);
-        Serial1.println();
-        //  serializeJson(outDbg, Serial);
-        //  Serial.println();    
-     
+        serializeJson(outDbg, mySerial);
+        mySerial.println();
+//          serializeJson(outDbg, Serial);
+//          Serial.println();    
 }
 /*END Communication Data*/////////////////////////////////////////////////////////////////////////////////////////
 
@@ -310,17 +331,18 @@ void read_temperature(){
     if(read_sht_humidity > 1){
         humidityMid = read_sht_humidity;
     }
-    // Serial.print(chamberTemp0);
-    // Serial.print("-");
-    // Serial.println(humidityMid);
+//    Serial.print(chamberTemp0);
+//    Serial.print("-");
+//    Serial.println(humidityMid);
 }
 /*end read sensor*/
 
 void read_skin_temperature(){
-    float read_skin_temperature0 = Xinfant.get_value_baby_skin(setValue0A, setValue0B, skinTemp1);
-    float read_skin_temperature1 = Xinfant.get_value_baby_skin(setValue1A, setValue1B, skinTemp2);
+    float read_skin_temperature0 = Xinfant.get_value_baby_skin(setValue0A, setValue0B, dataSensor1);
+    float read_skin_temperature1 = Xinfant.get_value_baby_skin(setValue1A, setValue1B, dataSensor2);
     if(read_skin_temperature0 > 21){
-        babySkinTemp0 = read_skin_temperature0;
+        convertskin0 = (read_skin_temperature0*100);
+        babySkinTemp0 = (float(convertskin0)/100);
         if(millis() - tcal > 1000){
             displayBabyTemp0 = babySkinTemp0;
         }
@@ -330,7 +352,8 @@ void read_skin_temperature(){
         displayBabyTemp0 = babySkinTemp0;
     }
     if(read_skin_temperature1 > 21){
-        babySkinTemp1 = read_skin_temperature1;
+        convertskin1 = (read_skin_temperature1*100);
+        babySkinTemp1 = (float(convertskin1)/100);
         if(millis() - tcal > 1000){
             displayBabyTemp1 = babySkinTemp1;
         }
@@ -366,36 +389,47 @@ void setup_fast_pwm(){
 void set_pwm(int fan, int heater){
     // OCR3A = heater;
     // OCR3B = fan;
-    OCR3B = outputFan;
+    // OCR3B = outputFan;
     analogWrite(heaterPin, heater);
     analogWrite(fanPin, fan);
 }
 
 void run_warmer(){
      errorHumidity = (setHumidity * 10) - (humidityMid * 10);
+   if(error0 == 0 && error1 == 0 && error2 == 0 && error3 == 0 && error4 == 0 && error5 == 0){ 
      if(humiMode == 1){
-      // digitalWrite(relayWarm, HIGH);
+       digitalWrite(relayWarm, HIGH);
         if(humidityMid < 0){
             analogWrite(warmerPin, 0);
             warmerPwm = 0;
         }else {
-            if(errorHumidity < -0.5 && errorHumidity > -35){
+            if(errorHumidity < -0.5 && errorHumidity > -95){
                 analogWrite(warmerPin, 0);
                 warmerPwm = 0;
             }  
-            if(errorHumidity < 950 && errorHumidity >= -0.1){
+            if(errorHumidity < 20.5 && errorHumidity >= -0.5 ){
+                analogWrite(warmerPin, 200);
+                warmerPwm = 200;
+            }
+            if(errorHumidity < 950 && errorHumidity >= 20.5){
                 analogWrite(warmerPin, 255); //255
                 warmerPwm = 255;
             }
         }
-   }
-   if(humiMode == 0){
+    }
+    if(humiMode == 0){
      analogWrite(warmerPin, 0);
      warmerPwm = 0;
-    //  digitalWrite(relayWarm, LOW);
+      digitalWrite(relayWarm, LOW);
    }
+  }
+  else{
+     analogWrite(warmerPin, 0);
+     warmerPwm = 0;
+     digitalWrite(relayWarm, LOW);
+    }
+   
 }
-
 /*End Control*/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void pewaktu(){
@@ -404,13 +438,14 @@ void pewaktu(){
     }    
 }
 
-/*Error Session*/
 
+/*Error Session*/
 void read_error(){
+  if(millis() - startup > 5000){
     errorAir = (setTemp * 10) - (chamberTemp0 * 10);
     errorSkin0 = (setTemp * 10) - (babySkinTemp0 * 10);
     errorSkin1 = (setTemp * 10) - (babySkinTemp1 * 10);
-if(alarmRst == 0){    
+  if(alarmRst == 0){    
     /*probe sensor missing*///////////////////////
     if(babySkinTemp0 == 0 || babySkinTemp1 == 0 || chamberTemp0 == 0){
         error0 = 1;
@@ -442,18 +477,19 @@ if(alarmRst == 0){
                 error1 = 0;
             }
         }
-        if(highTemp == 0 && babySkinTemp0 >= 38){
-          // || babySkinTemp1 >= 38  
+        if(highTemp == 0 && babySkinTemp0 >= 38 || babySkinTemp1 >= 38){
+          //   
           error3 = 1;
         } 
-        if(highTemp == 1 && babySkinTemp0 >= 38.5){
-          //|| babySkinTemp1 >= 38.5  
+        if(highTemp == 1 && babySkinTemp0 >= 38.5 || babySkinTemp1 >= 38.5){
+          //  
           error3 = 1;
         }         
         else{
           error3 = 0;
         }  
     }
+    
     if(skinMode == 2){
         steadytime0 = 0;
         error1 = 0;
@@ -465,7 +501,7 @@ if(alarmRst == 0){
             }
         }
         if(steadytime1 == 60){
-            if(chamberTemp0 >= setTemp+3 || chamberTemp0 <= setTemp-3){
+            if(chamberTemp0 >= setTemp+2 || chamberTemp0 <= setTemp-2){
                 error2 = 1;
             }
             else{
@@ -503,8 +539,7 @@ if(alarmRst == 0){
 //         error4 = 0;
 //     }
 //     /*end High Temperature Alarm*/////////////////////////
-    
-   
+       
     /*Power Failure*/
     powerIn = digitalRead(voltage5V);
     if(powerIn == 1){
@@ -515,19 +550,18 @@ if(alarmRst == 0){
     }
 
 /*Fan Failure*/
-//    ontime = pulseIn(pulse_ip,HIGH);
-//    offtime = pulseIn(pulse_ip,LOW);
-//    period = ontime+offtime;
-//    freq1 = 1000000.0/period;
-    // if(freq1 == 10){
-    //   error6 = 1;
-    // }
-    // if(freq1 > 10){
-    //   error6 = 0;
-    // }
+  uint16_t freq1 = analogRead(pulse_ip);
 
-}
-if(alarmRst == 1){
+     if(freq1 > 1000){
+       error6 = 1;
+     }
+     if(freq1 < 1000){
+       error6 = 0;
+     }
+     Serial.print(freq1);
+     Serial.println(error6);          
+  }
+  if(alarmRst == 1){
     error0 = 0;
     error1 = 0;
     error2 = 0;
@@ -535,8 +569,24 @@ if(alarmRst == 1){
     error4 = 0;
     error5 = 0;   
     error6 = 0;     
+  }
+ }
 }
-}
+
+//void sleep_available(){
+//  int vbatSense = analogRead(vbat);
+//  if(vbatSense <= 3.5 && error5 == 1){
+//    sleepMode(SLEEP_IDLE);
+//    sleep();
+//    sleep_time = 1;
+//  }
+//  if(vbatSense > 3.5 && error5 == 0){
+//    sleep_disable();
+//    noSleep();
+//    sleep_time = 0;
+//  }
+//}
+
 /*End read Error data or missing sensor*/////////////////////////////////////////////////////////////////////////////////////
 
 // void plotter(){
@@ -553,33 +603,35 @@ if(alarmRst == 1){
 
 /*tone buzzer function*/
 void PID(){
-setPoint1 = setTemp; 
-errorAir = (setTemp * 10) - (chamberTemp0 * 10);
-errorSkin0 = (setTemp * 10) - (babySkinTemp0 * 10);
-errorSkin1 = (setTemp * 10) - (babySkinTemp1 * 10);
- if(error0 == 0 && error1 == 0 && error2 == 0 && error3 == 0 && error4 == 0 && error5 == 0){    
+  setPoint1 = setTemp; 
+  errorAir = (setTemp * 10) - (chamberTemp0 * 10);
+  errorSkin0 = (setTemp * 10) - (babySkinTemp0 * 10);
+  errorSkin1 = (setTemp * 10) - (babySkinTemp1 * 10);
+  if(error0 == 0 && error1 == 0 && error2 == 0 && error3 == 0 && error4 == 0 && error5 == 0){    
     if(highTemp == 0){
       if(skinMode == 2 && errorAir > 6){
-        // digitalWrite(relayHeat, HIGH);
+         digitalWrite(relayHeat, HIGH);
         input = chamberTemp0;
         myPID.Compute();
         myPID2.Compute();
         set_pwm(outputFan, outputHeater);
         }
       else if(skinMode == 2 && errorAir <= 6){
+        digitalWrite(relayHeat, HIGH);
         run_control();
         outputHeater = heaterPwm;
         outputFan = fanPwm;
         input = chamberTemp0; 
       }
-      else if(skinMode == 1 && errorSkin0 > 5){ //jika sdh ada sensor skin2 di rata2
-        // digitalWrite(relayHeat, HIGH);
+      else if(skinMode == 1 && errorSkin0 > 5){ 
+         digitalWrite(relayHeat, HIGH);
         input = babySkinTemp0;
         myPID3.Compute();
         myPID2.Compute();
         set_pwm(outputFan, outputHeater);
       }
       else if(skinMode == 1 && errorSkin0 <= 5){
+        digitalWrite(relayHeat, HIGH);
         run_control();
         outputHeater = heaterPwm;
         outputFan = fanPwm;
@@ -587,7 +639,7 @@ errorSkin1 = (setTemp * 10) - (babySkinTemp1 * 10);
       }
       else{
         set_pwm(outputFan, outputHeater);
-        // digitalWrite(relayHeat, LOW);
+         digitalWrite(relayHeat, LOW);
         outputHeater = 0;
         outputFan = 100;
       }
@@ -595,26 +647,28 @@ errorSkin1 = (setTemp * 10) - (babySkinTemp1 * 10);
 
     if(highTemp == 1){
       if(skinMode == 2 && errorAir > 12){
-        // digitalWrite(relayHeat, HIGH);
+         digitalWrite(relayHeat, HIGH);
         input = chamberTemp0;
         myPID.Compute();
         myPID2.Compute();
         set_pwm(outputFan, outputHeater);
       }
       else if(skinMode == 2 && errorAir <= 12){
+        digitalWrite(relayHeat, HIGH);
         run_control();
         outputHeater = heaterPwm;
         outputFan = fanPwm;
         input = chamberTemp0; 
       }
       else if(skinMode == 1 && errorSkin0 > 3){ //jika sdh ada sensor skin2 di rata2
-        // digitalWrite(relayHeat, HIGH);
+         digitalWrite(relayHeat, HIGH);
         input = babySkinTemp0;
         myPID3.Compute();
         myPID2.Compute();
         set_pwm(outputFan, outputHeater);
       }
       else if(skinMode == 1 && errorSkin0 <= 3){
+        digitalWrite(relayHeat, HIGH);
         run_control();
         outputHeater = heaterPwm;
         outputFan = fanPwm;
@@ -624,13 +678,13 @@ errorSkin1 = (setTemp * 10) - (babySkinTemp1 * 10);
         set_pwm(outputFan, outputHeater);
         outputHeater = 0;
         outputFan = 100;
-        // digitalWrite(relayHeat, LOW);
+         digitalWrite(relayHeat, LOW);
       }    
     } 
   }
   else{
     set_pwm(outputFan, outputHeater);
-    // digitalWrite(relayHeat, LOW);
+     digitalWrite(relayHeat, LOW);
     outputHeater = 0;
     outputFan = 100;
   }  
@@ -639,18 +693,18 @@ errorSkin1 = (setTemp * 10) - (babySkinTemp1 * 10);
 
 void generate_pulse(){ 
   if(start == 0 && pulsa <= 19){ //20
-    if(millis() - timePulse > 5 && highState == 0){
+    if(millis() - timePulse > 2 && highState == 0){
       digitalWrite(clkOut, HIGH);     
       timePulse = millis();
       highState = 1;
     }
-    if(millis() - timePulse > 5 && highState == 1){
+    if(millis() - timePulse > 2 && highState == 1){
       dataArray[pulsa] = digitalRead(dataIn);
       pulsa++;
       timePulse = millis();
       highState = 2;
     } 
-    if(millis() - timePulse > 10 && highState == 2){
+    if(millis() - timePulse > 4 && highState == 2){
       digitalWrite(clkOut, LOW);
       timePulse = millis();
       highState = 3;
@@ -665,7 +719,7 @@ void generate_pulse(){
 void sample_data(){ 
     if(pulsa > 19){ //20
       digitalWrite(clkOut, LOW);
-        if(millis() - generateData > 250 && sampleState == 0){
+        if(millis() - generateData > 100 && sampleState == 0){
           for(halfBit = 0; halfBit < 10; halfBit++){
             bitWrite(dataSensor1, 9- halfBit , dataArray[halfBit]);
             Serial.print(dataArray[halfBit]);
@@ -683,7 +737,7 @@ void sample_data(){
             sampleState = 1;
             generateData = millis();
         }
-        if(millis() - generateData > 250 && sampleState == 1){
+        if(millis() - generateData > 100 && sampleState == 1){
             pulsa = 0;
             start = 0;
             sampleState = 0;
@@ -692,3 +746,18 @@ void sample_data(){
     }
 }
 
+void vbat_read(){
+  vbatsense = analogRead(vbat);
+  if(vbatsense <= 700 && error5 == 1){
+    valuePower = 0;
+  }
+  if(vbatsense > 700 || error5 == 0){
+    valuePower = 1;
+  }
+}
+
+void oxygen_sense(){
+  O2SensorDev.readADC();
+  int reado2 = O2SensorDev.getValue();
+  oxygen = reado2;
+}
