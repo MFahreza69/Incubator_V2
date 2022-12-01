@@ -22,9 +22,9 @@
 #define err0               32   //32 //probe fail           //13
 #define err1               29   //29 //temp deviation             //12
 #define err2               30   //30 //over temp             //23
-#define err3               28   //31 //power failure             //23
-#define err4               31    //28 //fan failure             //23
-#define err7               57   //
+#define err3               28   //28 //power failure             //23
+#define err4               31    //31 //fan failure             //23
+//#define err7               57   //
 #define lock_btn           10   //10                          //46
 #define led_lock           8   //8                           //31
 #define sunyiBtn           24   //24  
@@ -51,6 +51,21 @@ uint8_t displaysetTimer1 = 0;
 uint8_t displaysetTimer2 = 0;
 uint8_t Datatimer1;
 uint8_t Datatimer2;
+
+float debugAirway;
+float debugSkin1;
+float debugSkin2;
+float debugHumi;
+
+float holdAirway;
+float holdSkin1;
+float holdSkin2;
+float holdHumi;
+unsigned long timeDilation;
+float sumAirway = 0;
+float sumSkin1 = 0;
+float sumSkin2 = 0;
+float sumHumi = 0;
 
 //data from sensor
 float chamberTemp0 = 0;
@@ -105,8 +120,8 @@ int g = 0;
 float h;
 int i = 0;
 float j;
-uint8_t k = 0;
-uint8_t l = 0;
+unsigned long k = 0;
+unsigned long l = 0;
 uint8_t o;
 unsigned long p;
 uint8_t q = 0;
@@ -118,6 +133,7 @@ uint8_t alarmValue2 = 0;
 unsigned long dpTimer;
 uint8_t loopTimer;
 uint16_t convert;
+uint16_t converthumi;
 
 //data button
 uint8_t lastPower0;   //tombol kiri airtemp      
@@ -149,6 +165,19 @@ uint8_t currentPower10;  //Lock
 uint8_t currentPower11;  //Alarm
 uint8_t currentPower12;  //Sunyi Btn
 uint8_t currentPower13;  //set timer
+
+unsigned long incairTime;
+unsigned long decairTime;
+unsigned long incskinTime;
+unsigned long decskinTime;
+unsigned long inchumiTime;
+unsigned long dechumiTime;
+unsigned long lockTimer;
+uint8_t timeBtn;
+unsigned long debugTime;
+bool debugMode = 0;
+uint8_t skinSelect = 0;
+
 uint8_t onOff;
 
 uint8_t lastError0          = 0;
@@ -201,9 +230,11 @@ uint8_t heaterPwm = 0;
 uint8_t heatedPower = 0;
 uint8_t alarm[6] = {0,0,0,0,0,0};
 uint8_t sAlarm[6] = {1,1,1,1,1,1};
+unsigned long lcdOn;
 
 unsigned long lastTime3;
 uint8_t loopAlarm;
+bool fromInt2;
 
 SimpleTimer timer0;
 SimpleTimer timer1;
@@ -212,10 +243,11 @@ SimpleTimer timer4;
 
 
 void setup() {
+  analogReference(EXTERNAL);
   Serial1.begin(9600);
-  Serial.begin(9600);
+ Serial.begin(9600);
   timer0.setInterval(1000, generate_json);
-  timer4.setInterval(5000, plotter);
+ timer4.setInterval(5000, plotter);
   lc.setIntensity(0, 2);
   lc.setIntensity(1, 2);
   lc.setIntensity(2, 2);
@@ -253,6 +285,7 @@ void setup() {
   pinMode(err1, OUTPUT);
   pinMode(err2, OUTPUT);
   pinMode(err3, OUTPUT);
+  pinMode(err4, OUTPUT);
   pinMode(pinBuzzer, OUTPUT);
 
   digitalWrite(led_airway, HIGH);
@@ -265,6 +298,14 @@ void setup() {
   for(int thisled = 0; thisled < 10; thisled++){
     pinMode(graphpin[thisled], OUTPUT);
   }
+  cli();
+  EICRA = (1 << ISC21)|(1 << ISC20);
+  EIMSK = (1 << INT2);
+  sei();
+}
+
+ISR(INT2_vect){
+    onOff = 0;
 }
 
 void loop() {
@@ -272,25 +313,64 @@ void loop() {
 }
 
 void run_program(){ 
-    getData();
+   if(digitalRead(20)==LOW){
+    onOff++;
+    if(onOff >=100){  
+    error0 = 0;
+    error1 = 0;
+    error2 = 0;
+    error3 = 0;
+    error4 = 0;
+    error5 = 0;
+    error6 = 0;
+    skinMode = 0;
+    humiMode = 0;
+    lockMode = 0;
+    sunyiValue = 2;
+    highTemp = 0;
+    digit_kosong();
+    lcdOn = millis();
+    sleepMode(SLEEP_POWER_DOWN);
+    sleep();
+    Serial.println("sleep");
+    }
+    if(onOff > 100){
+      onOff = 100;
+    }
+   }
+   
+   if(digitalRead(20) == HIGH){ 
+    onOff = 0;
+    noSleep();
+    if(millis() - lcdOn < 100){
+      lc.shutdown(0, false);
+      lc.shutdown(1, false);
+      lc.shutdown(2, false);
+    }
+    getData(); 
     timer0.run();//generate_json();
-    // timer4.run();
+    timer4.run();
     // timer3.run();
     btn_menu();
     set_btn();
     reset_alarm();
-    display_digit();
     read_error();
     alarem();
+    display_digit();
+    // debug_mode();
+    Serial.print(skinSelect);
+    Serial.println(debugMode);
+   }
 }
+
 
 /* Send and Receive Data Session*///// 
 void generate_json(){
     StaticJsonDocument<512> out1;
     JsonObject DataButton = out1.createNestedObject("dt1");
-    DataButton["sn"][0]   = sendTemp;
+    DataButton["sn"][0]  = sendTemp;
     // DataButton["sn"][1] = sendSkin;
-    DataButton["sn"][1]   = sendHumi;
+    DataButton["sn"][1]  = sendHumi;
     DataButton["mod"][0] = skinMode;
     DataButton["mod"][1] = humiMode;
     DataButton["mod"][2] = highTemp;
@@ -300,8 +380,8 @@ void generate_json(){
     DataButton["mod"][6] = sendAlarm;
     serializeJson(out1, Serial1);
     Serial1.println();
-    // serializeJson(out1, Serial);
-    // Serial.println();       
+    //  serializeJson(out1, Serial);
+    //  Serial.println();       
 }
 
 void getData(){
@@ -309,7 +389,7 @@ void getData(){
     inputData[x] = Serial1.read();
     x++;
     if(inputData[x-1] == '\n'){
-      Serial.println(inputData);
+      // Serial.println(inputData);
       StaticJsonDocument<512>in;
       DeserializationError error = deserializeJson(in, inputData);
       x = 0;
@@ -338,32 +418,65 @@ void getData(){
 
 /*increment-Decrement function*/
 void btn_menu(){
+   lastPower0 = currentPower0;
+   lastPower1 = currentPower1;
+   lastPower2 = currentPower2;
+   lastPower3 = currentPower3;
+   lastPower4 = currentPower4;
+   lastPower5 = currentPower5;
+   currentPower0 = digitalRead(leftAir);
+   currentPower1 = digitalRead(rightAir);
+   currentPower2 = digitalRead(rightSkin);
+   currentPower3 = digitalRead(leftSkin);
+   currentPower4 = digitalRead(rightHumi);
+   currentPower5 = digitalRead(leftHumi);
   /*kontrol set Humi*/
+if(debugMode == 0){  
   if(setHumiMode == 1 && lockMode == 0){
-     lastPower4 = currentPower4;
-     currentPower4 = digitalRead(rightHumi);
      if(lastPower4 == HIGH && currentPower4 == LOW){
+      timeBtn = 0;
         displaysetHumi = displaysetHumi + 1;
         if(displaysetHumi > 90){
            displaysetHumi = 90;
         }
      }
-     lastPower5 = currentPower5;
-     currentPower5 = digitalRead(leftHumi);
+     if(currentPower4 == LOW){
+      if(millis() - inchumiTime > 2000){
+        displaysetHumi = displaysetHumi + 0.2;
+        if(displaysetHumi > 90){
+           displaysetHumi = 90;
+        }
+      }
+     }
+     if(currentPower4 == HIGH){
+      inchumiTime = millis();
+     }
+
      if(lastPower5 == HIGH && currentPower5 == LOW){
+      timeBtn = 0;
         displaysetHumi = displaysetHumi - 1;
         if(displaysetHumi < 30){
            displaysetHumi = 30;
         }
      }
+     if(currentPower5 == LOW){
+      if(millis() - dechumiTime > 2000){
+        displaysetHumi = displaysetHumi - 0.2;
+        if(displaysetHumi < 30){
+           displaysetHumi = 30;
+        }        
+      }
+     }
+     if(currentPower5 == HIGH){
+      dechumiTime = millis();
+     }
   }
 
   /*Kontrol set airtemp*/
    if(setAirway == 1 && lockMode == 0){
-      lastPower0 = currentPower0;
-      currentPower0 = digitalRead(leftAir); //fungsi btn kiri set airtemp
+     /*decrement airway*////////////////////////////////////////////////// 
       if(lastPower0 == HIGH && currentPower0 == LOW){
-//            timeBtn0 = 0;
+        timeBtn = 0;
          displaysetTemp = displaysetTemp - 0.1;
          if(highTemp == 1 ){
             if(displaysetTemp <= 37){
@@ -376,9 +489,30 @@ void btn_menu(){
             }
            }
         }
-      lastPower1 = currentPower1;
-      currentPower1 = digitalRead(rightAir);
+
+      if(currentPower0 == LOW){
+        if(millis() - decairTime > 2000){
+          displaysetTemp = displaysetTemp - 0.02;
+          if(highTemp == 1 ){
+            if(displaysetTemp <= 37){
+               displaysetTemp = 37;
+            }
+          }
+          if(highTemp == 0){
+            if(displaysetTemp <= 20){
+               displaysetTemp = 20;
+            }
+          }
+        }
+      } 
+      if(currentPower0 == HIGH){
+        decairTime = millis();
+      }
+/*end decrement airway*//////////////////////////////////////////////////
+
+/*increment Airway*//////////////////////////////////////////////////////
       if(lastPower1 == HIGH && currentPower1 == LOW){
+        timeBtn = 0;
          displaysetTemp = displaysetTemp + 0.1;
          if(highTemp == 1){
             if(displaysetTemp >= 39){
@@ -391,15 +525,35 @@ void btn_menu(){
             }
          }
       }
+    if(currentPower1 == LOW){
+      if(millis() - incairTime > 2000){
+        displaysetTemp = displaysetTemp + 0.02;
+         if(highTemp == 1){
+            if(displaysetTemp >= 39){
+               displaysetTemp = 39;
+            }
+          }
+         if(highTemp == 0){
+            if(displaysetTemp >= 37){
+               displaysetTemp = 37;
+            }
+         }        
+      }
+    }
+    if(currentPower1 == HIGH){
+      incairTime = millis();
+    }    
     }
 
+
+/*end increment airway*//////////////////////////////////////////////////
+
+/*increment skin*////////////////////////////////////////////////////////
     if(setSkinMode == 1 && lockMode == 0){
       // segmentBlank = 1;
       /*kontrol Skin Temp*/
-       lastPower2 = currentPower2;
-       currentPower2 = digitalRead(rightSkin);
        if(lastPower2 == HIGH && currentPower2 == LOW){
-//            timeBtn0 = 0;
+           timeBtn = 0;
           displaysetSkin = displaysetSkin + 0.1;
           if(highTemp == 1){
              if(displaysetSkin >= 38){
@@ -412,10 +566,29 @@ void btn_menu(){
              }
           }
        }
+      if(currentPower2 == LOW){
+        if(millis() - incskinTime > 2000){
 
-       lastPower3 = currentPower3;
-       currentPower3 = digitalRead(leftSkin);
+          displaysetSkin = displaysetSkin + 0.02;
+          if(highTemp == 1){
+             if(displaysetSkin >= 38){
+                displaysetSkin = 38;
+             }
+           }
+          if(highTemp == 0){
+             if(displaysetSkin >= 37){
+                displaysetSkin = 37;
+             }
+          }          
+        }
+      }
+      if(currentPower2 == HIGH){
+        incskinTime = millis();
+      }  
+
+/*end increment skin*///////////////////////////////////////////////////
        if(lastPower3 == HIGH && currentPower3 == LOW){
+        timeBtn = 0;
           displaysetSkin = displaysetSkin - 0.1;
           if(highTemp == 1){
              if(displaysetSkin <= 37){
@@ -428,23 +601,131 @@ void btn_menu(){
              }
           }
        }       
+      if(currentPower3 == LOW){
+        if(millis() - decskinTime > 2000){
+          displaysetSkin = displaysetSkin - 0.02;
+          if(highTemp == 1){
+             if(displaysetSkin <= 37){
+                displaysetSkin = 37;
+             }
+          }
+          if(highTemp == 0){
+             if(displaysetSkin <= 34){
+                displaysetSkin = 34;
+             }
+          }
+        }        
+      }
+      if(currentPower3 == HIGH){
+        decskinTime = millis();
+      }
     }
+  }
+
+ //////////////////////////////////////////////////////////////////////////// 
+  
+ if(debugMode == 1){
+  if(lastPower4 == HIGH && currentPower4 == LOW){
+      timeBtn = 0;
+        holdHumi = holdHumi + 1;
+        if(holdHumi > 90){
+           holdHumi = 90;
+        }
+     }
+   if(lastPower5 == HIGH && currentPower5 == LOW){
+      timeBtn = 0;
+        holdHumi = holdHumi - 1;
+        if(holdHumi < 30){
+           holdHumi = 30;
+        }
+     }
+   if(lastPower0 == HIGH && currentPower0 == LOW){
+       timeBtn = 0;
+        holdAirway = holdAirway - 0.1;
+            if(holdAirway <= 20){
+               holdAirway = 20;
+            }
+    }
+   if(lastPower1 == HIGH && currentPower1 == LOW){
+        timeBtn = 0;
+        holdAirway = holdAirway + 0.1;
+            if(holdAirway >= 39){
+               holdAirway = 39;
+            }
+    }
+  if(skinSelect == 0){
+    if(lastPower2 == HIGH && currentPower2 == LOW){
+        timeBtn = 0;
+        holdSkin1 = holdSkin1 + 0.1;
+             if(holdSkin1 >= 38.5){
+                holdSkin1 = 38.5;
+             }
+    }
+    if(lastPower3 == HIGH && currentPower3 == LOW){
+        timeBtn = 0;
+          holdSkin1 = holdSkin1 - 0.1;
+             if(holdSkin1 <= 25){
+                holdSkin1 = 25;
+             }
+    }
+  }
+  if(skinSelect == 1){
+    if(lastPower2 == HIGH && currentPower2 == LOW){
+        timeBtn = 0;
+        holdSkin2 = holdSkin2 + 0.1;
+             if(holdSkin2 >= 38.5){
+                holdSkin2 = 38.5;
+             }
+    }
+    if(lastPower3 == HIGH && currentPower3 == LOW){
+        timeBtn = 0;
+          holdSkin2 = holdSkin2 - 0.1;
+             if(holdSkin2 <= 25){
+                holdSkin2 = 25;
+             }
+    }    
+  }          
+ }  
 }
+
 
 
 /*Mode Set Function*/
 void set_btn(){
 /*Set Lock Mode*/
+  lastPower6 = currentPower6;
+  currentPower6 = digitalRead(setAir);
+  lastPower7 = currentPower7;
+  currentPower7 = digitalRead(setSkin);
+  lastPower8 = currentPower8;
+  currentPower8 = digitalRead(setHumi);
+  lastPower9 = currentPower9;
+  currentPower9 = digitalRead(bypassPin);
   lastPower10 = currentPower10;
   currentPower10 = digitalRead(lock_btn);
+  lastPower13 = currentPower13;
+  currentPower13 = digitalRead(setTimer);
+  lastPower12 = currentPower12;
+  currentPower12 = digitalRead(sunyiBtn);
+
+if(debugMode == 0){
+  if(setLockMode == 0){
+    if(millis() - lockTimer > 1000){
+        lockTimer = millis();
+        timeBtn++;
+      } 
+    }
   if(lastPower10 == HIGH && currentPower10 == LOW){
      setLockMode = setLockMode + 1;
      if(setLockMode == 1){
         lockMode = 1;
+        timeBtn = 60;
+        lockTimer = millis();
         digitalWrite(led_lock, LOW);
       }
 
      if(setLockMode == 2){
+      timeBtn = 0;
         lockMode = 0;
         setLockMode = 0;
         digitalWrite(led_lock, HIGH);
@@ -453,11 +734,18 @@ void set_btn(){
         }
      } 
   }
+    if(timeBtn >= 60){
+      setLockMode = 1;
+      lockMode = 1;
+      timeBtn = 60;
+      lockTimer = millis();
+      digitalWrite(led_lock, LOW);
+  }
+
 
   if(lockMode == 0 && skinMode <= 0){
-     lastPower9 = currentPower9;
-     currentPower9 = digitalRead(bypassPin);
      if(lastPower9 == HIGH && currentPower9 == LOW){
+      timeBtn = 0;
         setHigh = setHigh + 1 ;
         if(setHigh == 1){
            highTemp = 1;
@@ -477,9 +765,8 @@ void set_btn(){
 
 
   if(lockMode == 0){
-     lastPower6 = currentPower6;
-     currentPower6 = digitalRead(setAir);
      if(lastPower6 == HIGH && currentPower6 == LOW){
+      timeBtn = 0;
         setAirway = setAirway + 1;
         if(setAirway == 1){
         // skinMode = 2;
@@ -516,9 +803,8 @@ void set_btn(){
         }
       } 
 
-    lastPower7 = currentPower7;
-    currentPower7 = digitalRead(setSkin);
     if(lastPower7 == HIGH && currentPower7 == LOW){
+      timeBtn = 0;
       setSkinMode = setSkinMode + 1;
       if(setSkinMode == 1){
         // skinMode = 1;
@@ -531,7 +817,7 @@ void set_btn(){
       }
       /*Send data set skin to incubator*/
       if(setSkinMode == 2){
-        convert = ((displaysetSkin - 0.7)*10); 
+        convert = (displaysetSkin *10); 
         sendTemp = (float(convert)/10);
         setSkinMode = 2;
         setAirway = 0;
@@ -556,47 +842,70 @@ void set_btn(){
     }
 
       /*Set Humi Mode*/
-    lastPower8 = currentPower8;
-    currentPower8 = digitalRead(setHumi);
     if(lastPower8 == HIGH && currentPower8 == LOW){
+      timeBtn = 0;
        setHumiMode = setHumiMode + 1;
-       if(setHumiMode == 1){
-        // humiMode = 1;
-       }
+       if(setHumiMode == 1){}
             /*Send data set humidity to incubator*/
        if(setHumiMode == 2){
-          sendHumi = displaysetHumi;
+          converthumi = (displaysetHumi*10);
+          sendHumi = (float(converthumi)/10);
           digitalWrite(led_humi, LOW);
           humiMode = 1;
        } 
        if(setHumiMode == 3){
           setHumiMode = 0;
           humiMode = 0;
+          sendHumi = 0;
           digitalWrite(led_humi, HIGH);
        }
      }
    }
-
+}
     /* sunyi button */
-    lastPower12 = currentPower12;
-    currentPower12 = digitalRead(sunyiBtn);
       if(lastPower12 == HIGH && currentPower12 == LOW){
-         if(millis() - h > 350 && i == 0){
-            sunyiValue = 1;
-            i = 1;
-            h = millis();
-         }
+        timeBtn = 0;
+        // sunyiValue = 1;
+        k = millis();
+        l = millis();
+        if(millis() - k < 60000){
+          sunyiValue = 1;
         }
-         if(millis() - h > 350 && i == 1){
-            sunyiValue = 0;
+        if(millis() - h > 350 && i == 0){
+          last_sunyi_value = 1;
+          i = 1;
+          h = millis();
+        }
+      }
+        if(millis() - h > 350 && i == 1){
+            last_sunyi_value = 0;
             i = 0;
             h = millis();
-         }
+        }
+        if(millis() - k > 60000){
+          sunyiValue = 0;
+            k = millis();
+        }
+   
+
+
+
+if(debugMode == 1){
+  if(lastPower7 == HIGH && currentPower7 == LOW){
+      timeBtn = 0;
+      skinSelect++;
+      if(skinSelect >= 2){
+        skinSelect = 0;
+      } 
+  }
+ 
+}   
+
+ 
         
     /*set Timer BTN*/
-    lastPower13 = currentPower13;
-    currentPower13 = digitalRead(setTimer);
     if(lastPower13 == HIGH && currentPower13 == LOW){
+      timeBtn = 0;
        setTimerMode++;
        if(setTimerMode == 1){
          timeMode = 1;
@@ -615,6 +924,37 @@ void set_btn(){
         timeMode = 0;
        }
     }
+
+    if(currentPower13 == LOW){
+      if(millis() - debugTime > 7000 && debugMode == 0){
+        // if(millis() - timeDilation < 3){
+          holdAirway = chamberTemp0;
+          holdHumi = humidityMid;
+          holdSkin1 = skinTemp1;
+          holdSkin2 = skinTemp2;
+          Serial.println("--------------------------");
+          debugMode = 1;
+          timeBtn = 0;
+          timeMode = 0;
+          debugTime = millis();
+      // }
+      }
+      else if(millis() - debugTime > 7000 && debugMode == 1){
+        sumAirway = holdAirway - chamberTemp0;
+        sumSkin1 = holdSkin1 - skinTemp1;
+        sumSkin2 = holdSkin2 - skinTemp2;
+        sumHumi = holdHumi - humidityMid;        
+        timeBtn = 0;
+        timeMode = 0;
+        debugMode = 0;
+        debugTime = millis();
+      }
+    }
+    if(currentPower13 == HIGH){
+      debugTime = millis();
+    }
+
+
    
       /*LED Blinking while setpoint changed*/
         if(setSkinMode == 0 && setAirway == 1){
@@ -662,20 +1002,22 @@ void reset_alarm(){
     lastPower11 = currentPower11;
     currentPower11 = digitalRead(set_alarm);
     if(lastPower11 == HIGH && currentPower11 == LOW){
+      timeBtn = 0;
       //  setAlarmMode = setAlarmMode + 1;
+      p = millis();
       //  if(setAlarmMode == 1){       
-        if(millis() - p > 10000 && q == 0){
+        if(millis() - p < 20000){
           sendAlarm = 1;
-          q = 1;
-          p = millis();
-          Serial.print("stop");
+          // q = 1;
+          // p = millis();
+          // Serial.print("stop");
         }       
     }
-        if(millis() - p > 10000 && q == 1){
+        if(millis() - p > 20000){
           sendAlarm = 0;
-          q = 0;
-          p = millis();
-          Serial.print("stop2");
+          // q = 0;
+          // p = millis();
+          // Serial.print("stop2");
           // setAlarmMode = 0;
         }         
 } 
@@ -756,50 +1098,58 @@ void read_error(){
     alarm[6] = 1;
   }
 
-//trigger button
-  if(alarm[0] == 1 && sunyiValue == 1){
+//trigger off button
+  if(alarm[0] == 1 && last_sunyi_value == 1){
     sAlarm[0] = 0;
     alarm[0] = 0;
   }
-  if(alarm[1] == 1 && sunyiValue == 1){
+  if(alarm[1] == 1 && last_sunyi_value == 1){
     sAlarm[1] = 0;
     alarm[1] = 0;
   }  
-  if(alarm[2] == 1 && sunyiValue == 1){
+  if(alarm[2] == 1 && last_sunyi_value == 1){
     sAlarm[2] = 0;
     alarm[2] = 0;
   }
-  if(alarm[3] == 1 && sunyiValue == 1){
+  if(alarm[3] == 1 && last_sunyi_value == 1){
     sAlarm[3] = 0;
     alarm[3] = 0;
   }  
-  if(alarm[4] == 1 && sunyiValue == 1){
+  if(alarm[4] == 1 && last_sunyi_value == 1){
     sAlarm[4] = 0;
     alarm[4] = 0;
   }
-  if(alarm[5] == 1 && sunyiValue == 1){
+  if(alarm[5] == 1 && last_sunyi_value == 1){
     sAlarm[5] = 0;
     alarm[5] = 0;
   }
- if(alarm[6] == 1 && sunyiValue == 1){
+ if(alarm[6] == 1 && last_sunyi_value == 1){
     sAlarm[6] = 0;
     alarm[6] = 0;
   }  
-// check error again after button triggering
-  for(o=0; o<6; o++){
+// check error again after button silent triggering
+  for(o=0; o<7; o++){
     if(alarm[o] == 1){
       sirenAlarm = 1;
+      // last_sunyi_value == 0;
       alarmValue++;
-      if(alarmValue >= 50000){
-        alarmValue = 50000;
+      if(alarmValue >= 6000){
+        alarmValue = 6000;
         alarmValue2 = 1;
       }
     }
-    if(sunyiValue == 1){
-      sirenAlarm = 0;
-      alarmValue = 0;
-      alarmValue2 = 0;
+    if(last_sunyi_value == 1 ){
+        sirenAlarm = 0;
+        alarmValue = 0;
+        alarmValue2 = 0;
     }
+
+    if(sunyiValue == 0){
+      for(uint8_t j=0; j<7; j++){
+        sAlarm[j] = 1;
+      }
+    }
+
     if(error0 == 0 && error1 == 0 && error2 ==0 && error3 == 0 && error4 == 0 && error5 == 0 && error6 == 0){
       alarmValue = 0;
       alarmValue2 = 0;
@@ -920,12 +1270,77 @@ void digit_kosong(){
 }
 
 void nilaidigit() {
-  displayTemp = chamberTemp0;
-  displaySkin = skinTemp1;
-  displaySkin2 = skinTemp2;
-  displayHumi = humidityMid;
-  displaysetTimer1 = Datatimer1;
-  displaysetTimer2 = Datatimer2;
+  if(debugMode == 0){
+   displayTemp = chamberTemp0 + (sumAirway);
+   displaySkin = skinTemp1 + (sumSkin1);
+   displaySkin2 = skinTemp2 + (sumSkin2);
+   displayHumi = humidityMid + (sumHumi);
+   displaysetTimer1 = Datatimer1;
+   displaysetTimer2 = Datatimer2;
+
+    if(timeMode == 0){
+      digit20 = 0;
+      digit21 = 0;
+      digit22 = 0;                          /*PCB ALLISHA*/
+      digit23 = 0;    
+      lc.setChar(0, 2, '-', false);        //(0,2) 
+      lc.setChar(0, 6, '-', false);        //(0,6) 
+      lc.setChar(0, 4, '-', false);        //(0,4)
+      lc.setChar(0, 0, '-', false);        //(0,0)
+    }
+    if(timeMode == 1){
+      lc.setDigit(0, 2, digit20, false);   //(0,2)
+      lc.setDigit(0, 6, digit21, false);   //(0,6)
+      lc.setDigit(0, 4, digit22, true);   //(0,4) 
+      lc.setDigit(0, 0, digit23, true);   //(0,0)
+      digit20 = displaysetTimer1/10;
+      digit22 = displaysetTimer2/10;
+        if(displaysetTimer2 < 10){
+          digit23 = displaysetTimer2;
+        }  
+        if(displaysetTimer2 >= 10){
+          digit23 = (displaysetTimer2)-((displaysetTimer2/10)*(10));  
+        }
+        if(displaysetTimer1 < 10){
+          digit21 = displaysetTimer1;
+        }
+        if(displaysetTimer1 >= 10){
+          digit21 = (displaysetTimer1)-((displaysetTimer1/10)*(10));
+        }
+    }
+
+    if(timeMode == 3){
+      displaysetTimer1 = holdTimer1;
+      displaysetTimer2 = holdTimer2;
+      if(millis() - dpTimer > 500 && loopTimer == 0){
+        lc.setDigit(0, 2, digit20, false);   //(0,2)
+        lc.setDigit(0, 6, digit21, false);   //(0,6)
+        lc.setDigit(0, 4, digit22, true);   //(0,4) 
+        lc.setDigit(0, 0, digit23, true);   //(0,0)
+        dpTimer = millis();
+        loopTimer = 1;      
+      }
+      if(millis() - dpTimer > 500 && loopTimer == 1){
+        lc.setChar(0, 2, 'blank', false);   //(0,2)
+        lc.setChar(0, 6, 'blank', false);   //(0,6)
+        lc.setChar(0, 4, 'blank', true);   //(0,4) 
+        lc.setChar(0, 0, 'blank', true);   //(0,0)
+        dpTimer = millis();
+        loopTimer = 0;  
+      }
+    }
+  }
+
+  if(debugMode == 1){
+    displayTemp = holdAirway;
+    displaySkin = holdSkin1;
+    displaySkin2 = holdSkin2;
+    displayHumi = holdHumi;
+    lc.setChar(0, 2, 'c', false);   //(0,2)
+    lc.setChar(0, 6, 'a', false);   //(0,6)
+    lc.setChar(0, 4, 'l', false);   //(0,4) 
+    lc.setChar(0, 0, 'blank', false);   //(0,0)
+  }
 
   /*airway*/
   digit1 = displaysetTemp / 10;
@@ -952,58 +1367,9 @@ void nilaidigit() {
   digit18 = displaysetHumi / 10;
   digit19 = displaysetHumi - (digit18 * 10);
 
-  /*Timer*/
-  if(timeMode == 0){
-    digit20 = 0;
-    digit21 = 0;
-    digit22 = 0;                          /*PCB ALLISHA*/
-    digit23 = 0;    
-    lc.setChar(0, 2, '-', false);        //(0,2) 
-    lc.setChar(0, 6, '-', false);        //(0,6) 
-    lc.setChar(0, 4, '-', false);        //(0,4)
-    lc.setChar(0, 0, '-', false);        //(0,0)
-  }
-  if(timeMode == 1){
-    lc.setDigit(0, 2, digit20, false);   //(0,2)
-    lc.setDigit(0, 6, digit21, false);   //(0,6)
-    lc.setDigit(0, 4, digit22, true);   //(0,4) 
-    lc.setDigit(0, 0, digit23, true);   //(0,0)
-    digit20 = displaysetTimer1/10;
-    digit22 = displaysetTimer2/10;
-      if(displaysetTimer2 < 10){
-        digit23 = displaysetTimer2;
-      }  
-      if(displaysetTimer2 >= 10){
-        digit23 = (displaysetTimer2)-((displaysetTimer2/10)*(10));  
-      }
-      if(displaysetTimer1 < 10){
-        digit21 = displaysetTimer1;
-      }
-      if(displaysetTimer1 >= 10){
-        digit21 = (displaysetTimer1)-((displaysetTimer1/10)*(10));
-      }
-  }
 
-  if(timeMode == 3){
-    displaysetTimer1 = holdTimer1;
-    displaysetTimer2 = holdTimer2;
-    if(millis() - dpTimer > 500 && loopTimer == 0){
-    lc.setDigit(0, 2, digit20, false);   //(0,2)
-    lc.setDigit(0, 6, digit21, false);   //(0,6)
-    lc.setDigit(0, 4, digit22, true);   //(0,4) 
-    lc.setDigit(0, 0, digit23, true);   //(0,0)
-      dpTimer = millis();
-      loopTimer = 1;      
-    }
-    if(millis() - dpTimer > 500 && loopTimer == 1){
-    lc.setChar(0, 2, 'blank', false);   //(0,2)
-    lc.setChar(0, 6, 'blank', false);   //(0,6)
-    lc.setChar(0, 4, 'blank', true);   //(0,4) 
-    lc.setChar(0, 0, 'blank', true);   //(0,0)
-      dpTimer = millis();
-      loopTimer = 0;  
-    }
-  }
+  /*Timer*/
+
 }
 
 void plotter(){
@@ -1025,6 +1391,7 @@ void plotter(){
 void alarem(){
   if(sirenAlarm == 1){
     if(alarmValue2 == 0){
+      Serial.println("alarm1");
       if(millis() - lastTime3 > 1000 && loopAlarm == 0){
         lastTime3 = millis();
         loopAlarm = 1;
@@ -1037,6 +1404,7 @@ void alarem(){
       }
     }
     if(alarmValue2 == 1){
+      Serial.println("alarm2");
       if(millis() - lastTime3 > 1000 && loopAlarm == 0){
         lastTime3 = millis();
         loopAlarm = 1;
