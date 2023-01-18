@@ -1,0 +1,19 @@
+02/11/2022 - khusus untuk modul kompor dengan ID :11000014529 di Bali
+
+program ke 1 
+avrdude.exe -C avrdude.conf -v -patmega64 -carduino -PCOM9 -b115200 -D -Uflash:w:inject_3272Wh_11000014529.hex:i
+
+program ke 2
+avrdude.exe -C avrdude.conf -v -patmega64 -carduino -PCOM9 -b115200 -D -Uflash:w:Xooey_Emeter_24102022_V03.hex:i
+
+Catatan Penting, Wajib Dibaca : 
+1. Check Nomor "COM PORT" pada "Device Manager" di Personal Computer Windows
+2. Mohon diubah angka pada kata PCOM... untuk sintaks upload program melalui command prompt (cmd)
+
+
+Board Attiny
+Original :
+avrdude.exe -C avrdude.conf -v -pattiny1616 -cjtag2updi -PCOM30 -Uflash:w:node_tiny_32.ino.t1616.20c0.mD0.pfM.aOld.v2511_1705_1157.hex:i -Ufuse0:w:0x00:m -Ufuse1:w:0xF4:m -Ufuse2:w:0x02:m -Ufuse4:w:0x00:m -Ufuse5:w:0b11000101:m -Ufuse6:w:0x07:m -Ufuse7:w:0x00:m -Ufuse8:w:0x00:m -Ulock:w:{bootloader.LOCKBIT}:m
+
+Kalo Pake At tiny : 
+avrdude.exe -C avrdude.conf -v -pattiny1616 -cjtag2updi -PCOM6 -b9600 -D -Uflash:w:cobaatini.ino.t3216.20c0.mD0.v2511.hex:i
