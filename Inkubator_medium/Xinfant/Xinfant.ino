@@ -138,6 +138,7 @@ double setPoint1;
 double input;
 double outputHeater;
 double outputFan;
+
 uint8_t oxygen;
 uint8_t halfBit;
 uint8_t fullBit;
@@ -153,6 +154,10 @@ uint8_t start = 1;
 
 int vbatsense;
 bool valuePower = 1;
+float sumAirway;
+float sumSkin1;
+float sumSkin2;
+float sumHumi;
 
 
 PID myPID(&input, &outputHeater, &setPoint1, 40.68 , 0.23, 0 ,DIRECT);
@@ -161,7 +166,7 @@ PID myPID3(&input, &outputHeater, &setPoint1, 32.02, 0.23, 0, DIRECT);
 Xbaby Xinfant;
 RTC_DS3231 rtc;
 SHT1x sht15(shtData, shtClock);
-SoftwareSerial mySerial(6, 7); // RX, TX // Only Use RX
+SoftwareSerial mySerial(6, 7); // RX, TX 
 O2Sensor O2SensorDev(o2sensor);
 SimpleTimer timer0;
 SimpleTimer timer1;
@@ -271,6 +276,10 @@ void communication_serial(){
             if(!error){
                 setTemp     = in["dt1"]["sn"][0];
                 setHumidity = in["dt1"]["sn"][1];
+                sumAirway   = in["dt1"]["sn"][2];
+                sumSkin1    = in["dt1"]["sn"][3];
+                sumSkin2    = in["dt1"]["sn"][4];
+                sumHumi     = in["dt1"]["sn"][5];                
                 skinMode    = in["dt1"]["mod"][0];
                 humiMode    = in["dt1"]["mod"][1];
                 highTemp    = in["dt1"]["mod"][2];
@@ -294,8 +303,8 @@ void generate_json(){
         outDbg["sh"][3] = humidityMid;
         // outDbg["pw"][1] = round(outputFan);
         outDbg["tm"][0] = round(outputHeater);
-         outDbg["tm"][1] = now.hour();
-         outDbg["tm"][2] = now.minute();
+        outDbg["tm"][1] = now.hour();
+        outDbg["tm"][2] = now.minute();
 //         outDbg["tim"][2] = now.second();
         outDbg["er"][0] = error0; //probe missing
         outDbg["er"][1] = error1; // alarm deviation airway
@@ -323,13 +332,13 @@ void read_temperature(){
         chamberTemp0 = 0;
     }
     if(read_sht_temperature > 1){
-        chamberTemp0 = read_sht_temperature;
+        chamberTemp0 = read_sht_temperature + sumAirway;
     }
     if(read_sht_humidity < 1){
         humidityMid = 0;
     }
     if(read_sht_humidity > 1){
-        humidityMid = read_sht_humidity;
+        humidityMid = read_sht_humidity + sumHumi;
     }
 //    Serial.print(chamberTemp0);
 //    Serial.print("-");
@@ -342,7 +351,7 @@ void read_skin_temperature(){
     float read_skin_temperature1 = Xinfant.get_value_baby_skin(setValue1A, setValue1B, dataSensor2);
     if(read_skin_temperature0 > 21){
         convertskin0 = (read_skin_temperature0*100);
-        babySkinTemp0 = (float(convertskin0)/100);
+        babySkinTemp0 = (float(convertskin0)/100) + sumSkin1;
         if(millis() - tcal > 1000){
             displayBabyTemp0 = babySkinTemp0;
         }
@@ -353,7 +362,7 @@ void read_skin_temperature(){
     }
     if(read_skin_temperature1 > 21){
         convertskin1 = (read_skin_temperature1*100);
-        babySkinTemp1 = (float(convertskin1)/100);
+        babySkinTemp1 = (float(convertskin1)/100) + sumSkin2;
         if(millis() - tcal > 1000){
             displayBabyTemp1 = babySkinTemp1;
         }
@@ -441,10 +450,30 @@ void pewaktu(){
 
 /*Error Session*/
 void read_error(){
-  if(millis() - startup > 5000){
-    errorAir = (setTemp * 10) - (chamberTemp0 * 10);
-    errorSkin0 = (setTemp * 10) - (babySkinTemp0 * 10);
-    errorSkin1 = (setTemp * 10) - (babySkinTemp1 * 10);
+errorAir = (setTemp * 10) - (chamberTemp0 * 10);
+errorSkin0 = (setTemp * 10) - (babySkinTemp0 * 10);
+errorSkin1 = (setTemp * 10) - (babySkinTemp1 * 10);
+    /*Power Failure*/
+  powerIn = digitalRead(voltage5V);
+    if(powerIn == 1){
+        error5 = 0;
+    }
+    if(powerIn == 0){
+        error5 = 1;
+    }
+
+/*Fan Failure*/
+  uint16_t freq1 = analogRead(pulse_ip);
+     if(freq1 > 1000){
+       error6 = 1;
+     }
+     if(freq1 < 1000){
+       error6 = 0;
+     }
+     Serial.print(freq1);
+     Serial.println(error6);
+
+if(millis() - startup > 5000){
   if(alarmRst == 0){    
     /*probe sensor missing*///////////////////////
     if(babySkinTemp0 == 0 || babySkinTemp1 == 0 || chamberTemp0 == 0){
@@ -540,26 +569,7 @@ void read_error(){
 //     }
 //     /*end High Temperature Alarm*/////////////////////////
        
-    /*Power Failure*/
-    powerIn = digitalRead(voltage5V);
-    if(powerIn == 1){
-        error5 = 0;
-    }
-    if(powerIn == 0){
-        error5 = 1;
-    }
-
-/*Fan Failure*/
-  uint16_t freq1 = analogRead(pulse_ip);
-
-     if(freq1 > 1000){
-       error6 = 1;
-     }
-     if(freq1 < 1000){
-       error6 = 0;
-     }
-     Serial.print(freq1);
-     Serial.println(error6);          
+          
   }
   if(alarmRst == 1){
     error0 = 0;
