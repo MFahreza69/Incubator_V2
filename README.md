@@ -7,5 +7,5 @@ Code for main PCB incubator (atMega64)
 Code for pcb display Incubator (atMega64)
 
 
-## SkinTempIsolation ##
-At tiny1616 code for receiving 2,2kOhm skin sensor data and send them to main microcontroler
+## SkinTemp_Isolation/Mikro_Sensor ##
+at tiny1616 code for receiving 2,2kOhm skin sensor data and send them to main microcontroler
